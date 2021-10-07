@@ -54,6 +54,7 @@ Let's load it into R, and in doing so we'll skip the first two rows and add our 
 
 ```{r}
 # Write the code to load the CSV file here
+international_migration <- read_csv("data/tabula-md-statistical-handbook.csv",skip=2,col_names=c("Jurisdiction", "FY2010","FY2011", "FY2012", "FY2013", "FY2014", "FY2015", "FY2016", "FY2017", "FY2018", "Total"))
 ```
 
 Add a column for the type of migration ("international") and populate it:
@@ -62,32 +63,49 @@ Add a column for the type of migration ("international") and populate it:
 
 ```{r}
 # Write the code to add the column here
+
+international_migration <- mutate(international_migration, migration_type="international")
 ```
 
 ## Answer questions
 
 **Q1** Which region and county/city _below_ the state level accounted for the largest percentage of international migration for the entire time period? You'll need to add and populate a column representing percent of total using `mutate`.
 **A1** [write your answer here]
-
+Suburban Washington Region
+Montgomery County
 ```{r}
 # Write the code to produce your answer here
+stateTotal <- international_migration %>%
+  filter(Jurisdiction =="Maryland") %>%
+  select(Total) %>%
+  as_vector()
+
+international_migration <- mutate(international_migration, percentage=Total/stateTotal)
 
 ```
 
 **Q2** Write a sentence or two that describes the data you produced in A1. Try to convey the most important idea.
 **A2** [write your answer here]
+Using the knowledge about the existence of the state total in the row where the Jurisdiction is "Maryland," we can create a new column with each other jurisdiction's percentage of the state total using the jurisdiction totals for each of the other rows in the table. 
 
 **Q3** Which region & jurisdiction had the largest percentage change (either negative or positive) for international migration between July 2018 and July 2017? The formula for percentage change is easy to remember: (New-Old)/Old.
 **A3** [write your answer here]
-
+Calvert County, -76.923077%
 ```{r}
 # Write the code to produce your answer here
+# new is FY2017 (2017-2018)
+# old is FY2016 (2016-2017)
 
+foo <- international_migration  %>%
+  filter(Jurisdiction !="Maryland") %>%
+  select(Jurisdiction, FY2017, FY2016) %>%
+  mutate(diff = (FY2017-FY2016)/FY2016) %>%
+  arrange(desc(abs(diff)))
 ```
 
 **Q4** What's your best guess as to why these changes occurred, and in those places in particular?
 **A4** [write your answer here]
-
+Almost all jurisdictions had net negative for that time frame, probably due to political impacts of anti-immigration rules put into place during 1st year of Trump's presidency.
 
 ## Back to Tabula
 
@@ -103,6 +121,8 @@ Let's load it into R, and in doing so we'll skip the first two rows and add our 
 
 ```{r}
 # Write the code to load the CSV file here
+domestic_migration <- read_csv("data/tabula-md-statistical-handbookDomestic.csv",skip=2,col_names=c("Jurisdiction", "FY2010","FY2011", "FY2012", "FY2013", "FY2014", "FY2015", "FY2016", "FY2017", "FY2018", "Total"))
+
 ```
 
 Add a column for the type of migration ("domestic") and populate it:
@@ -111,24 +131,42 @@ Add a column for the type of migration ("domestic") and populate it:
 
 ```{r}
 # Write the code to add the column here
+domestic_migration <- mutate(domestic_migration, migration_type="domestic")
+
 ```
 
 ## Answer questions
 **Q5** Which Maryland individual jurisdiction saw the largest net decrease in domestic migration overall?
 **A5** [write your answer here]
-
+Baltimore City, -62834
 ```{r}
 # Write the code to produce your answer here
+domesticTotal <- domestic_migration %>%
+  filter(Jurisdiction !="Maryland") %>%
+  select(Jurisdiction,Total) %>%
+  arrange(desc(abs(Total)))
 
 ```
 
 **Q6** How many regions & jurisdictions had net positive migration for July 2017, July 2018 and July 2019 (not just individually but all three together)?
 **A6** [write your answer here]
-
+18
 ```{r}
 # Write the code to produce your answer here
+# filter out Maryland
+# Select out the three years
+# sum them into a new mutate column
+# select the ones where the new column value is greater than 0
+foo2<- domestic_migration %>%
+  filter(Jurisdiction !="Maryland") %>%
+  select(Jurisdiction,FY2016, FY2017, FY2018) %>%
+  mutate(threeYrSum=FY2016+FY2017+FY2018) %>%
+  filter(threeYrSum >0) 
+foo2 %>%  
+  summarise(count=n())
 
 ```
 
 **Q7** How would you describe this data? Is there a county or region that stands out, and why?
 **A7** [write your answer here]
+This shows the trends in growth over the three year period 2017-2019. Frederick County seems to stand out because it has more than double the next county's net increase.

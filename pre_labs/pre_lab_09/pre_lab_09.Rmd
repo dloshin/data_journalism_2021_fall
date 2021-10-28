@@ -31,7 +31,7 @@ The dataset we'll use is the PPP loan data for Maryland.  Let's load it.
 ### Task 2: Load data
 **Task** Run the following code to load packages. In the space below, indicate how many rows and columns it has.
 **Answer**
-
+195865 rows of 63 columns
 ```{r}
 ppp_maryland <- read_csv("data/ppp_loans_md.csv.zip")
 ```
@@ -51,7 +51,7 @@ First, we'll create a dataframe of those top 10, called maryland_ppp_top_countie
 ### Task 3: Create a dataframe of top 10 counties for PPP loans in Maryland
 **Task** Run the following code to create a dataframe of top 10 loans by county in Maryland. In the space below, explain what each step of the code below is doing in English.
 **Answer**
-
+Grouing by county names then counting the number of loans in each county and sorting in descending order and taking the top 10.
 ```{r}
 maryland_ppp_top_counties <- ppp_maryland %>%
   group_by(project_county_name) %>%
@@ -71,7 +71,7 @@ With ggplot, the first thing we'll always do is draw a blank canvas that will ho
 ### Task 4: Create an empty ggplot container
 **Task** Run the following code. Explain what you see after running the code in the space below.
 **Answer**
-
+A chart with nothing in it.
 ```{r}
 maryland_ppp_top_counties %>%
   ggplot()
@@ -102,7 +102,7 @@ After we've invoked the ggplot() function, you'll notice we're using a + symbol.
 ### Task 5: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below.
 **Answer**
-
+Bar chart, unordered columns, names smooshed together.
 ```{r}
 maryland_ppp_top_counties %>%
   ggplot() +
@@ -114,7 +114,7 @@ This is a very basic chart.  But it's hard to derive much meaning from this char
 ### Task 6: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. What has changed from the last codeblock?
 **Answer**
-
+same data chart with bars ordered in ascending order to the right.
 ```{r}
 maryland_ppp_top_counties %>%
   ggplot() +
@@ -126,7 +126,7 @@ This is a little more useful. But the bottom is kind of a mess, with overlapping
 ### Task 7: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. What has changed from the last codeblock?
 **Answer**
-
+Same chart but flipped axes.
 ```{r}
 maryland_ppp_top_counties %>%
   ggplot() +
@@ -145,7 +145,7 @@ It's kind of like applying CSS to html. Here I'm changing the theme slightly to 
 ### Task 8: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. What has changed from the last codeblock?
 **Answer**
-
+WHite background?
 ```{r}
 maryland_ppp_top_counties %>%
   ggplot() +
@@ -172,6 +172,7 @@ And now we'll apply the economist theme from that package with theme_economist()
 ### Task 10: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. What has changed from the last version of the chart?
 **Answer**
+Different font and blue background and the chart grid is different.
 ```{r}
 maryland_ppp_top_counties %>%
   ggplot() +
@@ -184,7 +185,7 @@ Those axis titles are kind of a mess. Let's change "count" on the x axis to "tot
 ### Task 11: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. What has changed from the last codeblock?
 **Answer**
-
+Chart with the labels we added.
 ```{r}
 maryland_ppp_top_counties %>%
   ggplot() +
@@ -193,8 +194,8 @@ maryland_ppp_top_counties %>%
   theme_economist() +
   labs(
     title="Maryland Counties with Most PPP Loans",
-    x = "total loans",
-    y = "county",
+    y = "total loans",
+    x = "county",
     caption = "source: SBA PPP loan database"
     
   )
@@ -212,7 +213,7 @@ So, let's create a dataframe with a count of Maryland loans for each date in our
 ### Task 12: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. 
 **Answer**
-
+Dataframe with dates and the number of loans approved on that date.
 ```{r}
 
 ppp_maryland_loans_by_date <- ppp_maryland %>%
@@ -231,7 +232,7 @@ We'll put the date on the x axis and total loans on the y axis.
 ### Task 13: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. 
 **Answer**
-
+Line chart, big spike early (probably the first setof loans), then others, then a lull after the intial money ran out, then more activity for second draw loans.
 ```{r}
 ppp_maryland_loans_by_date %>%
   ggplot() + 
@@ -253,7 +254,7 @@ We'll set the date_breaks to appear for every month; if we wanted every week, we
 ### Task 14: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. 
 **Answer**
-
+Same chart but with a tick mark for the beginning of each month.
 ```{r}
 ppp_maryland_loans_by_date %>%
   ggplot() + 
@@ -268,6 +269,7 @@ Those are a little hard to read, so we can turn them 45 degrees to remove the ov
 ### Task 15: Run the following code
 **Task** Run the following code. Explain what you see after running the code in the space below. 
 **Answer**
+Ooh much nicer, I can actually read that.
 ```{r}
 ppp_maryland_loans_by_date %>%
   ggplot() + 

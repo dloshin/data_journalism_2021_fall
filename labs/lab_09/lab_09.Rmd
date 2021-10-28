@@ -31,10 +31,44 @@ You MUST do the following things when answering this question:
 
 Basically, your chart should look like this image, which will appear when you run the codeblock below. 
 
+**A1.** 
+
 ```{r}
 knitr::include_graphics(rep("images/chart_1.png"))
 ```
-**A1.** 
+```{r}
+library(tidyverse)
+ppp_wv_loans <- read_rds("data/lab_09.rds")
+
+ppp_wv_loans_by_date <- ppp_wv_loans %>%
+  group_by(date_approved) %>%
+  filter(str_detect(date_approved, "2020-04")) %>%
+  summarise(
+    total_loans=n()
+  )
+
+ppp_wv_loans_by_date 
+
+ppp_wv_loans_by_date %>%
+  ggplot() + 
+  ggtitle("Daily Loan Totals April 2020") + 
+  geom_line(aes(x=date_approved, y=total_loans)) + 
+  geom_point(aes(x=date_approved, y=total_loans)) + 
+  xlab("Date") +
+  ylab("Total number of loans") +
+  geom_text(aes(x=date_approved, y=total_loans, label = total_loans),
+              hjust = 1,
+              vjust = 0) +
+  scale_x_date(date_breaks = "1 day", date_labels = "%m-%d-%Y") +
+  labs(caption="Source: SBA PPP Loan data") +
+  theme(
+    axis.text.x = element_text(angle = 45,  hjust=1) 
+  ) 
+  
+
+
+
+```
 
 **Q2.** What are the top 10 states that got the most PPP loans per 100,000 people? You MUST do the following things when answering this question:
 
@@ -45,7 +79,48 @@ knitr::include_graphics(rep("images/chart_1.png"))
 * Make the bars on the chart blue! I didn't show you how to do this in the prelab, so do some web sleuthing to figure it out.  
 
 **A2.** 
+```{r}
+library(tidycensus)
+# Load the data
+state_ppp_all <- read_csv("data/state_ppp_all.csv") 
 
+state_ppp_all <- state_ppp_all %>%
+    mutate(state = case_when(
+     state == "N Dakota" ~ "North Dakota",
+     state == "S Dakota" ~ "South Dakota",
+     TRUE ~ state))
+  
+  
+
+# Census API key
+mykey <- scan("../../censusapikey.txt", what=character())
+census_api_key(mykey, install=TRUE, overwrite=TRUE)
+
+# Get ACS variables
+acs1 <- load_variables(2019, "acs5", cache = TRUE)
+
+# For "Estimate!!Total:" and "SEX BY AGE" the variable name is B01001_001
+# rename column names
+
+state_pop <- get_acs(geography = "state", variables = c(total_pop = "B01001_001")) %>%
+              rename(population=estimate) %>%
+              rename(state=NAME) %>%
+              arrange(desc(population))
+
+# join and calculate count PPP loans per 100K people
+states_with_pop_top <- state_ppp_all %>% inner_join(state_pop) %>%
+    mutate(loansPer100k=total_ppp_loans/(population/100000)) %>%
+    arrange(desc(loansPer100k)) %>%
+    head(10)
+
+states_with_pop_top %>%
+ ggplot() +
+ geom_bar(aes(x=reorder(state, loansPer100k), weight=loansPer100k), fill = "blue")+ 
+  ggtitle("Top 10 States: Number of PPP Loans per 100,000 population") + 
+  xlab("State") +
+  ylab("Loans per 100K population") +
+  theme(axis.text.x = element_text(angle = 45,  hjust=1)) 
+```
 **Q3.**  A scatterplot is a type of chart that helps us see relationships between two variables. One variable goes on the x axis, the other on the y axis.  For each row/observation in our data, a scatterplot puts a circle (or a "point") where the two variables intersect on a grid. 
 
 Statisticians use scatterplots to show graphically whether one variable is correlated -- related, in a statistical sense -- with another variable.  A classic example is the [relationship between ice cream sales and temperature](https://www.mathsisfun.com/data/scatter-xy-plots.html).  The scatterplot below (press play to load the image) shows that relationship, that an increase in temperature is associated with an increase in ice cream sales. When it's 12C, sales are 200 dollars, and when it's hotter, 25C, sales are 600 dollars.
@@ -67,6 +142,14 @@ To answer those questions, make a codeblock and do the following:
 5. In the answer space below, describe what you see and answer the questions posed above.  In a general sense, what do you think this means?  
 
 **A3.**  
+Most had all forgiven, many had some percentage *not* forgiven, might have to do with how the money was used and if it complied with the law's specification that a certain percentage be spent on salary vs. other expenses.
+```{r}
+small_wv_loans <- ppp_wv_loans %>%
+  filter(amount <= 25000) %>%
+  mutate_if(is.numeric, ~replace_na(., 0))
 
+ggplot(small_wv_loans, aes(x=amount, y=forgiveness_amount)) + geom_point(size=0.3)
+
+```
 
 -30-

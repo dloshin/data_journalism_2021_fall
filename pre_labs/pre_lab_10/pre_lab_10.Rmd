@@ -84,7 +84,9 @@ knitr::include_graphics(rep("images/ppp_datawrapper7.png"))
 Some publication systems allow for the embedding of HTML into a post or a story. Some don't. The only way to know is to ask someone at your publication. Every publication system on the planet, though, can publish an image. So there's always a way to export your chart as a PNG file, which you can upload like any photo.
 
 **Answer** Copy the url of the graphic you published here.
-
+```{r, echo=FALSE}
+knitr::include_graphics(rep("images/iOLAz-2021-ppp-loan-volume-by-lender-type.png"))
+```
 ### Task 8: Make a Choropleth Map
 
 Let's create a choropleth map - one that shows variations between the total number of approved PPP applications across Maryland counties. First, we'll need to generate that data using our collection of Maryland PPP loans.
@@ -97,7 +99,7 @@ maryland_ppp <- read_rds("data/pre_lab_10.rds")
 
 **Task** First, we'll create a dataframe that has county (jurisdiction) level counts of approved applications. Run the following code to do that. There are some mistakes in the data, so we're going to remove those with a filter after doing the counting.
 **Answer** Describe what the code below is doing and the output.
-
+aggregating counts of loans by county
 ```{r}
 md_counties <- maryland_ppp %>%
     group_by(project_county_name) %>%
@@ -106,7 +108,7 @@ md_counties <- maryland_ppp %>%
 
 **Task** Let's deal with those seemingly extraneous records that don't appear to be MD PPP applications:
 **Answer** Describe what the code below is doing and the output.
-
+Getting rid of those couties with fewer than 7 loans
 ```{r}
 md_counties <- maryland_ppp %>%
     group_by(project_county_name) %>%
@@ -135,7 +137,7 @@ Looks good, but there are two issues: Datawrapper expects a 5-digit FIPS code (t
 
 **Task** Generate full FIPS codes
 **Answer** Describe the contents of the new `fips_code` column
-
+The combined state and county codes into a single 5-digit code
 ```{r}
 md_fips <- md_fips %>% mutate(fips_code = str_c(state_code, county_code))
 ```
@@ -158,7 +160,7 @@ md_fips <- md_fips %>% mutate(match_county = str_to_upper(county)) %>%
 
 **Task** Now we'll join `md_counties` and `md_fips` together using our new `match_county` column:
 **Answer** Describe here what you see in `md_counties_with_fips`
-
+JOINed table with loan counts by county/FIPS
 ```{r}
 md_counties_with_fips <- md_counties %>%
   left_join(md_fips, by=c('project_county_name'='match_county'))
@@ -193,6 +195,7 @@ You'll see that the map currently is of the whole nation, and we only have Maryl
 
 **Task** Look for "Hide regions without data" under Appearance, and click the slider icon to enable that feature. You should see a map zoomed into Maryland with some counties in various colors.
 **Answer** Describe the changes from the previous map
+limits it to just Maryland but it still looks a little weird.
 
 But it's a little rough visually, so let's clean that up.
 
@@ -202,8 +205,13 @@ That's better, but check out the tooltip by hovering over a county. It's not sup
 
 **Task** Click the "Customize tooltips" button so it expands down. Change {{ fips }} to {{ county }} and {{ count }} to {{ FORMAT(count, "0,0.[00]")}}
 **Answer** Describe the changes from the previous map
+Now says the county name and a comma'd count.
 
 Ok, that looks better. Let's publish!
 
 **Task** Click the "Proceed" button until you get to the "Publish & Embed" tab, then click "Publish Now". Copy the URL and paste it below.
 **Answer** Put the URL of your map here.
+```{r, echo=FALSE}
+knitr::include_graphics(rep("images/NFYcd-businesses-in-montgomery-and-prince-georges-counties-take-bulk-of-ppp-loans.png"))
+```
+

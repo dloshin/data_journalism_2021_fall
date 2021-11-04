@@ -273,6 +273,7 @@ Ooh much nicer, I can actually read that.
 ```{r}
 ppp_maryland_loans_by_date %>%
   ggplot() + 
+  ggtitle()
   geom_line(aes(x=date_approved, y=total_loans)) + 
   scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +
   theme(

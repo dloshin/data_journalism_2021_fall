@@ -21,6 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 # Turn off scientific notation
 options(scipen=999)
+library(stringi)
 library(tidyverse)
 library(janitor)
 library(lubridate)
@@ -110,8 +111,54 @@ To do that, you will need to:
 Google the top 2-3 zip codes from both Maryland and non-Maryland results and describe them in your answer.
 
 **A2.**
+In Maryland: 20906, 20878, 20874. Highly populatted areas?
+Out of maryland: 20011, 20009, 20002. Is it possible these are MD residents vaccinated in the listed Zip codes?
 
 ```{r}
+today_date <- today(tzone = "")
+
+# Read in all the rercords, get rid of ones with malformed zips (probably ones with leading 0!!!)
+all_by_zip <- read_csv("https://raw.githubusercontent.com/state-of-maryland/VaccineCSVs/master/Vax_ZIP_CODE_FirstSecondSingle_Totals_Raw.csv") %>%
+  mutate(vaccination_date = today_date) %>%
+  mutate(ziplen = str_length(ZIP_CODE)) %>% 
+  filter(ziplen == 5) %>%
+  mutate(ZIP_CODE = as.character(ZIP_CODE))
+
+# Get the population data for MD zip codes (for later, but has a list of MD zip codes!)
+acs1 <- load_variables(2019, "acs5", cache = TRUE)
+
+md <- get_acs(geography = "zcta",
+              variables = c(population="B01001_001"),
+              state = "MD") %>%
+  mutate(ZIP_CODE = GEOID)
+
+#
+# join by ZIP_CODE
+# Note that we only have GEOID values for the Maryland Zip Codes, so we can get rid of the ones where that
+# value is NA
+#
+md_by_zip2 <- all_by_zip %>% left_join(md, by=c("ZIP_CODE"="ZIP_CODE")) %>%
+  filter(!is.na(GEOID)) %>%
+  arrange(desc(FullyVaccinated))
+
+# got a list of MD zip codes from https://www.zipdatamaps.com/list-of-zip-codes-in-maryland.php
+# This was not really right so I commented it out
+# md_lowest_zip <- "20601"
+# md_highest_zip <- "21930"
+# 
+# md_by_zip <- all_by_zip %>%
+#   filter(stri_cmp_le(ZIP_CODE, md_highest_zip)) %>%
+#   filter(stri_cmp_ge(ZIP_CODE, md_lowest_zip)) %>%
+#   arrange(desc(FullyVaccinated))
+
+others_by_zip <- all_by_zip %>% left_join(md, by=c("ZIP_CODE"="ZIP_CODE")) %>%
+  filter(is.na(GEOID)) %>%
+  arrange(desc(FullyVaccinated))
+
+#stri_cmp_gt("20902", md_lowest_zip)
+md_by_zip2 %>% head(25)
+others_by_zip %>% head(25)
+
 ```
 
 **Q3.** Maryland has had one of the more successful vaccination rates, but you want to understand where a significant portion of the population remains less than fully vaccinated. Make a dataframe of all Maryland zip codes from the vaccination data you used in Q2 and join it to Maryland zip code population data from the Census API. Calculate the percentage of fully vaccinated for each zip code and then make a map showing the zip codes with less than 50 percent fully vaccinated. Put a blank map with the outline of Maryland counties (which you can get from Tigris) behind it for context. Add a label to the map describing what the data is and include the date from the vaccination data (programmatically, so you can run it every day).
@@ -121,6 +168,44 @@ You WILL need to ensure that the columns you use to join the two dataframes are 
 Describe the output of the map below, and say what you think the most interesting areas are.
 
 **A3.**
-
+Looks like a lot of the western MD Zip codes and a bunch along the Delaware border. These might be relatively low-population areas.
 ```{r}
+# Write code here to load the ACS variables
+# I did this for the answer to #2 see above
+
+# Calculate the percent fully vaccinated and filter out those that have less than 50%
+md_by_zip_lt50 <- md_by_zip2 %>%
+  mutate(pctFullVaccinated = (FullyVaccinated/estimate) * 100) %>%
+  filter(pctFullVaccinated < 50)
+
+# Get the Geography data for Maryland counties
+counties <- counties() 
+md_counties <- counties %>%
+  filter(STATEFP == "24")
+
+# Get the Zip Code data 
+zctas <- zctas()
+
+# Join the Zip Code geography data with the 
+md_zctas <- md_by_zip_lt50 %>% left_join(zctas,  by=c("ZIP_CODE"="ZCTA5CE10"))
+
+mapTitle <- "Maryland Zip Codes with fewer than 50% fully vaccinated"
+
+# Create a sall dataframe with just the date field, although I could have used the variable I created earlier also
+currentRec1 <- md_by_zip_lt50 %>% head(1) %>% select(vaccination_date)
+
+# Subtitle shows the "as of" date
+mapSub <- paste("As of ", currentRec1$vaccination_date, sep="")
+
+# Plot the first layer of counties in white, then the Zips with <50% in orange
+#
+ggplot() + 
+  geom_sf(data=md_counties, fill="white") + 
+  aes(geometry = geometry) +
+  geom_sf(data=md_zctas, fill="orange") + 
+  aes(geometry = geometry) +
+  theme_minimal() +
+  labs(title = mapTitle,  
+       subtitle = mapSub)
+
 ```
